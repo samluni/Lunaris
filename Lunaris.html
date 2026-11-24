@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LUNARIS — Eksplorasi Bulan & Hilal</title>
+<style>
+:root{--bg:#080d1c;--panel:#111a30;--panel2:#17233d;--text:#edf3ff;--muted:#aab8d4;--accent:#8edcff;--gold:#ffd783;--line:#293957}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#1a2b4b 0,transparent 35%),var(--bg);color:var(--text);font:16px/1.6 system-ui,Arial,sans-serif}
+header{padding:28px max(5vw,20px);border-bottom:1px solid var(--line)}.brand{font-size:1.8rem;font-weight:800;letter-spacing:.18em;color:var(--accent)}header p{color:var(--muted);margin:4px 0}
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:14px max(5vw,20px);position:sticky;top:0;background:#080d1ceF;backdrop-filter:blur(10px);z-index:3;border-bottom:1px solid var(--line)}
+button,.btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:10px 15px;border-radius:12px;cursor:pointer;font-weight:650}button.active,button:hover{background:#254365;border-color:var(--accent)}
+main{max-width:1050px;margin:30px auto;padding:0 18px}.page{display:none}.page.active{display:block}.hero,.card{background:linear-gradient(145deg,var(--panel),#0d1528);border:1px solid var(--line);border-radius:20px;padding:24px;margin-bottom:18px}
+h1,h2,h3{line-height:1.2}h1{font-size:clamp(2rem,5vw,3.6rem);margin:.2em 0;color:#fff}h2{color:var(--accent)}p{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+label{display:block;color:var(--muted);font-size:.9rem;margin:10px 0 5px}input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:#091225;color:var(--text)}
+.metric{background:#0a1428;border:1px solid var(--line);border-radius:14px;padding:15px}.metric b{display:block;font-size:1.45rem;color:var(--gold)}.moon{font-size:6rem;text-align:center;line-height:1.2;filter:drop-shadow(0 0 25px #dceaff66)}
+.notice{border-left:3px solid var(--gold);padding:10px 14px;background:#29243a;border-radius:8px;color:#f4e8ca}.small{font-size:.88rem}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+canvas{width:100%;max-width:700px;height:auto;background:#071020;border-radius:14px;display:block;margin:12px auto}
+footer{text-align:center;padding:30px;color:var(--muted);border-top:1px solid var(--line);margin-top:40px}
+</style></head>
+<body>
+<header><div class="brand">LUNARIS</div><p>Lunar Observation & Islamic Calendar Science</p></header>
+<nav>
+<button class="active" data-page="home">Beranda</button><button data-page="phase">Fase Bulan</button><button data-page="hilal">Kalkulator Hilal</button><button data-page="calendar">Ramadan & Syawal</button><button data-page="learn">Kamus</button>
+</nav>
+<main>
+<section id="home" class="page active">
+<div class="hero"><div class="moon">🌙</div><h1>Kenali Bulan, pahami hilal.</h1><p>Jelajahi fase Bulan dan pelajari bagaimana posisi Bulan terhadap Matahari dan horizon berkaitan dengan pengamatan hilal.</p><div class="actions"><button onclick="showPage('phase')">Jelajahi fase Bulan</button><button onclick="showPage('hilal')">Coba kalkulator hilal</button></div></div>
+<div class="grid"><div class="card"><h3>Fase Bulan</h3><p>Lihat fase, iluminasi, elongasi, dan perkiraan posisi Bulan untuk tanggal dan lokasi pilihan.</p></div><div class="card"><h3>Hilal</h3><p>Pelajari parameter yang digunakan dalam kriteria visibilitas hilal.</p></div><div class="card"><h3>Ilmu Astronomi</h3><p>Pahami istilah astronomi di balik pengamatan Bulan.</p></div></div>
+</section>
+<section id="phase" class="page">
+<div class="card"><h2>Moon Phase Explorer</h2><p>Pilih tanggal dan lokasi untuk melihat estimasi fase Bulan.</p>
+<div class="grid"><div><label>Tanggal dan waktu lokal</label><input id="phaseDate" type="datetime-local"></div><div><label>Kota</label><select id="phaseCity"><option value="-7,-6.2">Surabaya (WIB)</option><option value="-6.2,-6.2">Jakarta (WIB)</option><option value="-6.9,-6.9">Bandung (WIB)</option><option value="-7.8,-7.8">Yogyakarta (WIB)</option><option value="-8.65,-8.65">Denpasar (WITA)</option><option value="-3.6,-3.6">Medan (WIB)</option><option value="-5.1,-5.1">Makassar (WITA)</option><option value="0,0">Koordinat manual</option></select></div><div><label>Lintang (°)</label><input id="plat" type="number" step=".01" value="-7.25"></div><div><label>Bujur (°)</label><input id="plon" type="number" step=".01" value="112.75"></div></div>
+<div class="actions"><button onclick="calcPhase()">Hitung fase Bulan</button></div><div id="phaseResult" class="grid" style="margin-top:18px"></div><canvas id="phaseSky" width="700" height="230" aria-label="Ilustrasi fase Bulan"></canvas><p class="small">Bentuk sabit pada ilustrasi mengikuti fase dan bagian terang Bulan. Gambar bersifat skematis.</p></div>
+</section>
+<section id="hilal" class="page">
+<div class="card"><h2>Kalkulator Estimasi Hilal</h2><p>Simulasi edukatif untuk tanggal dan lokasi pengamatan. Hasil bukan keputusan resmi awal bulan Hijriah.</p>
+<div class="grid"><div><label>Tanggal pengamatan</label><input id="hilalDate" type="date"><p class="small">Waktu pengamatan ditetapkan pukul 18.00 waktu lokal kota yang dipilih.</p></div><div><label>Kota</label><select id="hilalCity"><option value="-7.25,112.75" data-tz="7">Surabaya (WIB)</option><option value="-6.2,106.8" data-tz="7">Jakarta (WIB)</option><option value="-6.9,107.6" data-tz="7">Bandung (WIB)</option><option value="-7.8,110.4" data-tz="7">Yogyakarta (WIB)</option><option value="-8.65,115.2" data-tz="8">Denpasar (WITA)</option><option value="3.59,98.67" data-tz="7">Medan (WIB)</option><option value="-5.14,119.43" data-tz="8">Makassar (WITA)</option></select></div><div><label>Lintang (°)</label><input id="hlat" type="number" step=".01" value="-7.25"></div><div><label>Bujur (°)</label><input id="hlon" type="number" step=".01" value="112.75"></div><div><label>Jenis pengamatan</label><select id="monthType"><option>Awal Ramadan</option><option>Awal Syawal</option><option>Simulasi umum</option></select></div></div>
+<div class="actions"><button onclick="calcHilal()">Estimasi hilal</button></div><div id="hilalResult" style="margin-top:18px"></div><canvas id="sky" width="700" height="230"></canvas><p class="small">Ketinggian Bulan pada ilustrasi berubah sesuai tanggal dan lokasi yang dipilih. Ilustrasi tetap skematis, bukan peta langit atau ephemeris presisi.</p><div class="notice small">Catatan MABIMS: ambang hisab yang digunakan adalah tinggi hilal minimal 3° dan elongasi minimal 6,4°. Memenuhi ambang berarti memenuhi kriteria hisab, bukan bukti bahwa hilal telah benar-benar terlihat. Kepastian terlihat atau tidak memerlukan pengamatan rukyat.</div></div>
+</section>
+<section id="calendar" class="page">
+<div class="card"><h2>Perkiraan Awal Ramadan & Syawal</h2>
+<p>Masukkan tahun Masehi untuk memperoleh perkiraan tanggal 1 Ramadan dan 1 Syawal berdasarkan kriteria hisab MABIMS (tinggi hilal minimal 3° dan elongasi minimal 6,4°) pada pukul 18.00 waktu lokal kota terpilih, selaras dengan Kalkulator Hilal.</p>
+<div class="grid"><div><label>Tahun Masehi</label><input id="forecastYear" type="number" min="1900" max="2100" value="2027"></div><div><label>Kota pengamatan</label><select id="forecastCity"><option value="-7.25,112.75" data-tz="7">Surabaya (WIB)</option><option value="-7.98,112.63" data-tz="7">Malang (WIB)</option><option value="-6.2,106.8" data-tz="7">Jakarta (WIB)</option><option value="-6.9,107.6" data-tz="7">Bandung (WIB)</option><option value="-7.8,110.4" data-tz="7">Yogyakarta (WIB)</option><option value="-8.65,115.2" data-tz="8">Denpasar (WITA)</option><option value="3.59,98.67" data-tz="7">Medan (WIB)</option><option value="-5.14,119.43" data-tz="8">Makassar (WITA)</option></select></div></div>
+<div class="actions"><button onclick="forecastHijri()">Perkirakan tanggal</button></div>
+<div id="forecastResult" style="margin-top:18px"></div>
+<div class="grid" id="forecastMoonInfo" style="margin-top:14px"></div>
+<canvas id="forecastSky" width="700" height="230"></canvas>
+<p class="small">Informasi umur, iluminasi, dan bentuk Bulan merupakan estimasi pada pukul 18.00 waktu lokal hari penentu (sebelum tanggal awal bulan). Penetapan resmi pemerintah tetap melalui hisab, rukyat, dan sidang isbat.</p>
+</div></section>
+<section id="learn" class="page"><div class="card"><h2>Kamus Astronomi Bulan</h2>
+<h3>Mengapa fase Bulan berubah?</h3><p>Bulan tidak menghasilkan cahaya sendiri. Bulan memantulkan cahaya Matahari. Saat Bulan mengorbit Bumi, bagian sisi terang yang terlihat dari Bumi berubah sehingga kita melihat fase-fase berbeda.</p>
+<h3>Elongasi</h3><p>Sudut pisah antara arah Bulan dan Matahari jika dilihat dari Bumi. Semakin besar elongasi, umumnya semakin jauh Bulan tampak dari Matahari di langit.</p>
+<h3>Altitude</h3><p>Ketinggian sudut benda langit dari horizon. Nilai positif berarti berada di atas horizon.</p>
+<h3>Iluminasi</h3><p>Persentase piringan Bulan yang tampak terang dari Bumi.</p>
+<h3>Azimuth</h3><p>Arah horizontal benda langit sepanjang horizon, biasanya diukur dari utara searah jarum jam.</p>
+<h3>Kriteria MABIMS</h3><p>Kriteria imkanur rukyat MABIMS yang digunakan di Indonesia menetapkan tinggi hilal minimal 3° dan elongasi minimal 6,4° sebagai parameter kriteria. Keduanya perlu dipenuhi; ini bukan jaminan hilal pasti terlihat.</p>
+<div class="notice">Penetapan resmi awal Ramadan dan Syawal di Indonesia dilakukan melalui proses hisab, rukyat, dan sidang isbat oleh pemerintah. Gunakan situs ini untuk pembelajaran, bukan sebagai penentu kalender resmi.</div></div></section>
+</main><footer>LUNARIS · Media pembelajaran astronomi · Perhitungan dalam situs ini bersifat pendekatan.</footer>
+<script>
+const $=id=>document.getElementById(id);
+function showPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'})}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+const now=new Date();const local=new Date(now-now.getTimezoneOffset()*60000).toISOString().slice(0,16);$('phaseDate').value=local;$('hilalDate').value=local.slice(0,10);
+$('phaseCity').onchange=()=>{let v=$('phaseCity').value.split(',');if(v[0]!=='0'){$('plat').value=v[0];$('plon').value=v[1]}};
+$('hilalCity').onchange=()=>{let v=$('hilalCity').value.split(',');$('hlat').value=v[0];$('hlon').value=v[1]};
+function moonData(date){
+ let jd=date.getTime()/86400000+2440587.5,syn=29.530588853;
+ let age=((jd-2451550.1)%syn+syn)%syn,phase=age/syn;
+ let illum=(1-Math.cos(2*Math.PI*phase))/2*100;
+ let names=['Bulan Baru','Sabit Muda','Perbani Awal','Cembung Awal','Purnama','Cembung Akhir','Perbani Akhir','Sabit Tua'];
+ let idx=Math.floor((phase*8+.5)%8);
+ return {age,phase,illum,name:names[idx],elong:Math.min(180,Math.abs(phase-.5)*360),waxing:phase<.5};
+}
+function evalHilalMabims(yy,mm,dd,lat,tz){
+ let d=new Date(Date.UTC(yy,mm-1,dd,18-tz,0,0));
+ let m=moonData(d);
+ let dayOfYear=Math.floor((Date.UTC(yy,mm-1,dd)-Date.UTC(yy,0,0))/86400000);
+ let seasonal=5*Math.sin(2*Math.PI*(dayOfYear-80)/365.2422)*Math.cos(lat*Math.PI/180);
+ let lunarCycle=17*Math.sin(2*Math.PI*(m.age/29.530588853));
+ let alt=Math.max(-15,Math.min(35,lunarCycle+seasonal));
+ let elong=m.elong;
+ let pass=alt>=3&&elong>=6.4;
+ let lag=Math.max(0,Math.round(alt*3));
+ return {d,m,alt,elong,pass,lag};
+}
+function card(label,value){return `<div class="metric"><span>${label}</span><b>${value}</b></div>`}
+function drawPhaseDisk(ctx,cx,cy,r,illum,waxing){
+ illum=Math.max(0,Math.min(100,illum));
+ ctx.fillStyle='#34435b';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+ ctx.save();ctx.beginPath();
+ if(waxing){
+   ctx.moveTo(cx,cy-r);
+   ctx.arc(cx,cy,r,-Math.PI/2,Math.PI/2,false);
+   ctx.quadraticCurveTo(cx+r*(1-2*illum/100),cy,cx,cy-r);
+ }else{
+   ctx.moveTo(cx,cy-r);
+   ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI*1.5,true);
+   ctx.quadraticCurveTo(cx+r*(2*illum/100-1),cy,cx,cy-r);
+ }
+ ctx.closePath();ctx.fillStyle='#f5e8b8';ctx.fill();ctx.restore();
+ ctx.strokeStyle='#cbd8ee';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+}
+function drawMoon(canvas,illum,waxing){
+ if(!canvas)return;
+ let c=canvas,ctx=c.getContext('2d'),cx=c.width/2,cy=100,r=48;
+ ctx.clearRect(0,0,c.width,c.height);
+ ctx.fillStyle='#071020';ctx.fillRect(0,0,c.width,c.height);
+ ctx.strokeStyle='#8edcff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(24,cy+r+20);ctx.lineTo(c.width-24,cy+r+20);ctx.stroke();
+ ctx.fillStyle='#aab8d4';ctx.font='15px sans-serif';ctx.fillText('Horizon',28,cy+r+43);
+ drawPhaseDisk(ctx,cx,cy,r,illum,waxing);
+ ctx.fillStyle='#edf3ff';ctx.font='14px sans-serif';ctx.textAlign='center';
+ ctx.fillText(waxing?'Bagian terang di kanan':'Bagian terang di kiri',cx,22);
+ ctx.textAlign='start';
+}
+function calcPhase(){
+ let d=new Date($('phaseDate').value);if(isNaN(d))return;
+ let m=moonData(d),lat=+$('plat').value,lon=+$('plon').value;
+ let alt=Math.max(-90,Math.min(90,45*Math.sin((d.getHours()-12)*Math.PI/12)+Math.cos(lat*Math.PI/180)*20-10));
+ let az=(180+lon+360)%360;
+ $('phaseResult').innerHTML=`<div class="metric" style="grid-column:1/-1;text-align:center"><h2>${m.name}</h2><p>Umur Bulan sekitar ${m.age.toFixed(1)} hari</p></div>${card('Iluminasi',m.illum.toFixed(1)+'%')}${card('Elongasi pendekatan',m.elong.toFixed(1)+'°')}${card('Altitude ilustratif',alt.toFixed(1)+'°')}${card('Azimuth ilustratif',az.toFixed(1)+'°')}<p class="small" style="grid-column:1/-1">Altitude dan azimuth hanya ilustrasi, bukan posisi ephemeris akurat.</p>`;
+ drawMoon($('phaseSky'),m.illum,m.waxing);
+}
+function calcHilal(){
+ let dateValue=$('hilalDate').value;if(!dateValue)return;
+ let [yy,mm,dd]=dateValue.split('-').map(Number);
+ let citySelect=$('hilalCity'),tz=Number(citySelect.options[citySelect.selectedIndex].dataset.tz||7);
+ let lat=+$('hlat').value||0;
+ let h=evalHilalMabims(yy,mm,dd,lat,tz);
+ let {m,alt,elong,pass,lag}=h;
+ let status=pass?'Memenuhi kriteria hisab MABIMS':'Belum memenuhi kriteria hisab MABIMS';
+ $('hilalResult').innerHTML=`<div class="grid">${card('Waktu perhitungan',`18.00 ${tz===7?'WIB':tz===8?'WITA':'WIT'}`)}${card('Fase Bulan',m.name)}${card('Umur Bulan (perkiraan)',m.age.toFixed(1)+' hari')}${card('Elongasi (pendekatan)',elong.toFixed(1)+'°')}${card('Tinggi hilal (ilustratif)',alt.toFixed(1)+'°')}${card('Perkiraan jeda terbenam','sekitar '+lag+' menit')}</div><p class="notice" style="margin-top:16px"><b>${status}</b><br>${pass?'Angka pendekatan mencapai ambang tinggi 3° dan elongasi 6,4°. Ini menunjukkan potensi memenuhi kriteria hisab.':'Satu atau lebih angka pendekatan belum mencapai ambang tinggi 3° dan elongasi 6,4°.'}<br><b>Status terlihat:</b> Belum dapat dipastikan dari kalkulator ini. Hilal baru dinyatakan terlihat jika berhasil diamati melalui rukyat.</p><p class="small">Perhitungan menggunakan waktu 18.00 waktu lokal kota yang dipilih. Ketinggian pada ilustrasi berubah mengikuti tanggal, umur Bulan, dan lintang pengamat. Angka tinggi serta elongasi tetap merupakan model edukatif sederhana, bukan data hisab resmi. Jangan gunakan untuk keputusan ibadah atau kalender resmi.</p>`;
+ let c=$('sky'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);
+ ctx.strokeStyle='#8edcff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(25,185);ctx.lineTo(675,185);ctx.stroke();
+ ctx.fillStyle='#aab8d4';ctx.font='18px sans-serif';ctx.fillText('Horizon',28,215);
+ let x=350,y=185-alt*4;
+ y=Math.max(25,Math.min(220,y));
+ drawPhaseDisk(ctx,x,y,20,m.illum,m.waxing);
+ ctx.fillStyle='#edf3ff';ctx.font='16px sans-serif';
+ ctx.fillText('Bulan · '+m.name,x+30,Math.max(18,y-8));
+ ctx.fillStyle='#aab8d4';ctx.font='13px sans-serif';
+ ctx.fillText('Ketinggian ilustratif: '+alt.toFixed(1)+'°',470,35);
+}
+function islamicToJD(year,month,day){
+ return day+Math.ceil(29.5*(month-1))+(year-1)*354+Math.floor((3+11*year)/30)+1948439-1;
+}
+function jdToDate(jd){
+ let ms=(jd-2440587.5)*86400000;return new Date(ms);
+}
+function fmtDate(d){return d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});}
+function resolveMabimsMonthStart(approxDate,lat,tz){
+ let baseUtcMidnight=Date.UTC(approxDate.getUTCFullYear(),approxDate.getUTCMonth(),approxDate.getUTCDate());
+ let fallback=null;
+ for(let offset=-3;offset<=1;offset++){
+   let cand=new Date(baseUtcMidnight+offset*86400000);
+   let yy=cand.getUTCFullYear(),mm=cand.getUTCMonth()+1,dd=cand.getUTCDate();
+   let ev=evalHilalMabims(yy,mm,dd,lat,tz);
+   if(offset===0)fallback={ev,startDate:new Date(baseUtcMidnight+(offset+1)*86400000),istikmal:false};
+   if(ev.pass){
+     return {ev,startDate:new Date(baseUtcMidnight+(offset+1)*86400000),istikmal:false};
+   }
+ }
+ let istDate=new Date(baseUtcMidnight+86400000);
+ let evIst=evalHilalMabims(istDate.getUTCFullYear(),istDate.getUTCMonth()+1,istDate.getUTCDate(),lat,tz);
+ return fallback?{ev:evIst,startDate:istDate,istikmal:true}:{ev:evIst,startDate:istDate,istikmal:true};
+}
+function forecastHijri(){
+ let gy=+$('forecastYear').value;if(!Number.isInteger(gy)||gy<1900||gy>2100){$('forecastResult').innerHTML='<p class="notice">Masukkan tahun antara 1900 sampai 2100.</p>';return;}
+ let hijri=gy-579;
+ let chosen=null;
+ for(let hy=hijri-1;hy<=hijri+1;hy++){
+   let r=jdToDate(islamicToJD(hy,9,1)),s=jdToDate(islamicToJD(hy,10,1));
+   if(r.getUTCFullYear()===gy||s.getUTCFullYear()===gy){chosen={hy,r,s};break;}
+ }
+ if(!chosen){$('forecastResult').innerHTML='<p class="notice">Tidak dapat menentukan perkiraan untuk tahun tersebut.</p>';return;}
+ let citySelect=$('forecastCity'),tz=Number(citySelect.options[citySelect.selectedIndex].dataset.tz||7);
+ let city=$('forecastCity').value.split(','),lat=+city[0];
+ let resR=resolveMabimsMonthStart(chosen.r,lat,tz);
+ let resS=resolveMabimsMonthStart(chosen.s,lat,tz);
+ let mr=resR.ev.m,ms=resS.ev.m;
+ let tzLabel=tz===7?'WIB':tz===8?'WITA':'WIT';
+ $('forecastResult').innerHTML=`<div class="grid">${card('Perkiraan 1 Ramadan  '+chosen.hy,fmtDate(resR.startDate))}${card('Perkiraan 1 Syawal  '+chosen.hy,fmtDate(resS.startDate))}</div><p class="notice small">Dihitung memakai kriteria MABIMS (tinggi hilal ≥ 3° dan elongasi ≥ 6,4°) pada pukul 18.00 ${tzLabel} sesuai Kalkulator Hilal${resR.istikmal||resS.istikmal?' (termasuk penyesuaian istikmal 30 hari bila ambang belum tercapai)':' '}. Hasil tetap bersifat simulasi edukatif, bukan penetapan resmi.</p>`;
+ $('forecastMoonInfo').innerHTML=`<div class="metric"><h3>Penentu 1 Ramadan (${resR.ev.d.toISOString().slice(0,10)} · 18.00 ${tzLabel})</h3><b>${mr.name}</b><p>Umur Bulan ${mr.age.toFixed(1)} hari · iluminasi ${mr.illum.toFixed(1)}% · elongasi ${resR.ev.elong.toFixed(1)}° · tinggi ${resR.ev.alt.toFixed(1)}° (${resR.ev.pass?'Memenuhi MABIMS':'Belum memenuhi MABIMS'})</p><p class="small">Data identik dengan perhitungan Kalkulator Hilal pada tanggal dan kota yang sama.</p></div><div class="metric"><h3>Penentu 1 Syawal (${resS.ev.d.toISOString().slice(0,10)} · 18.00 ${tzLabel})</h3><b>${ms.name}</b><p>Umur Bulan ${ms.age.toFixed(1)} hari · iluminasi ${ms.illum.toFixed(1)}% · elongasi ${resS.ev.elong.toFixed(1)}° · tinggi ${resS.ev.alt.toFixed(1)}° (${resS.ev.pass?'Memenuhi MABIMS':'Belum memenuhi MABIMS'})</p><p class="small">Data identik dengan perhitungan Kalkulator Hilal pada tanggal dan kota yang sama.</p></div>`;
+ let c=$('forecastSky'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#071020';ctx.fillRect(0,0,c.width,c.height);
+ function moonAt(x,y,m){drawPhaseDisk(ctx,x,y,35,m.illum,m.waxing);}
+ moonAt(210,95,mr);moonAt(490,95,ms);ctx.fillStyle='#edf3ff';ctx.font='16px sans-serif';ctx.textAlign='center';ctx.fillText('Menjelang Ramadan',210,165);ctx.fillText('Menjelang Syawal',490,165);ctx.textAlign='start';
+}
+</script></body></html>
